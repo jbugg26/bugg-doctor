@@ -322,7 +322,7 @@
 </div>
 
 <script>
-const API_URL = "https://api.anthropic.com/v1/messages";
+const API_URL = "/.netlify/functions/ask-doctor";
 const MODEL = "claude-sonnet-4-6";
 const MEMBERSHIP_URL = "https://jasonbugg.gumroad.com/l/pdjpe";
 const BREAKDOWN_URL = "https://jasonbugg.gumroad.com/l/opiut";
@@ -380,9 +380,6 @@ function render(){
 }
 
 function resetScroll(){
-  // Belt-and-suspenders: different embedding contexts scroll different elements,
-  // and web fonts loading in late can shift layout after our first reset — so we
-  // reapply a few times across the next moments instead of trusting one attempt.
   const doReset = () => {
     window.scrollTo(0, 0);
     document.documentElement.scrollTop = 0;
@@ -505,7 +502,6 @@ async function askNext(){
       throw new Error('empty response');
     }
 
-    // Pull out the JSON object even if the model added stray text or fences around it.
     const firstBrace = raw.indexOf('{');
     const lastBrace = raw.lastIndexOf('}');
     if(firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace){
@@ -538,7 +534,7 @@ async function askNext(){
     showThinking(false);
     const errBox = document.getElementById('errBox');
     if(errBox){
-      errBox.innerHTML = '<div class="err">The doctor got interrupted.</div>';
+      errBox.innerHTML = '<div class="err">The doctor got interrupted.<br><small style="opacity:0.7">' + (err && err.message ? err.message : 'unknown error') + '</small></div>';
       const retryBtn = document.createElement('button');
       retryBtn.className = 'btn ghost';
       retryBtn.style.marginTop = '10px';
