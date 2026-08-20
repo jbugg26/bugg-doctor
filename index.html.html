@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+<title>The Bugg Doctor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#141b25;
+    --bg-2:#1c2531;
+    --paper:#efe7d6;
+    --paper-2:#e6dcc6;
+    --ink:#1c2230;
+    --ink-soft:#4a4638;
+    --clay:#b4432e;
+    --clay-dim:#8f3526;
+    --field:#3f6b4a;
+    --steel:#8a94a6;
+    --steel-2:#5b6577;
+    --cream:#efe7d6;
+    --shadow: 0 24px 60px -20px rgba(0,0,0,0.55);
+    --radius: 3px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(180,67,46,0.10), transparent 60%),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+    font-family:'Source Serif 4', Georgia, serif;
+    color:var(--cream);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px 16px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .stage{
+    width:100%;
+    max-width:480px;
+  }
+  .letterhead{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    padding:0 6px 14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--steel);
+  }
+  .letterhead .mark{
+    color:var(--clay);
+    font-weight:500;
+  }
+  .progress{
+    height:2px;
+    background:rgba(239,231,214,0.12);
+    border-radius:2px;
+    margin:0 6px 18px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--clay);
+    width:25%;
+    transition:width 0.5s cubic-bezier(.65,0,.35,1);
+  }
+  .chart{
+    background:
+      linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+    color:var(--ink);
+    border-radius:6px;
+    box-shadow:var(--shadow);
+    padding:34px 28px 28px;
+    position:relative;
+    min-height:420px;
+    max-height:min(76vh, 680px);
+    display:flex;
+    flex-direction:column;
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+  }
+  .chart::before{
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0;
+    height:5px;
+    background:repeating-linear-gradient(90deg, var(--clay) 0 18px, transparent 18px 26px);
+    opacity:0.55;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--steel-2);
+    margin:0 0 6px;
+  }
+  .eyebrow b{ color:var(--clay-dim); font-weight:500; }
+  h1.rx{
+    font-family:'Barlow Condensed', sans-serif;
+    font-weight:600;
+    font-size:30px;
+    line-height:1.12;
+    letter-spacing:0.01em;
+    margin:0 0 14px;
+    color:var(--ink);
+  }
+  p.lede{
+    font-size:15.5px;
+    line-height:1.55;
+    color:var(--ink-soft);
+    margin:0 0 22px;
+  }
+  textarea, input[type=text]{
+    width:100%;
+    font-family:'Source Serif 4', Georgia, serif;
+    font-size:15.5px;
+    line-height:1.5;
+    color:var(--ink);
+    background:rgba(255,255,255,0.35);
+    border:1px solid rgba(28,34,48,0.18);
+    border-radius:3px;
+    padding:14px;
+    resize:none;
+    outline:none;
+    transition:border-color .2s;
+  }
+  textarea:focus, input[type=text]:focus{
+    border-color:var(--clay);
+    background:rgba(255,255,255,0.55);
+  }
+  .btn{
+    appearance:none;
+    border:none;
+    cursor:pointer;
+    font-family:'Barlow Condensed', sans-serif;
+    font-weight:600;
+    font-size:16px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    padding:14px 22px;
+    border-radius:3px;
+    background:var(--clay);
+    color:var(--cream);
+    transition:transform .12s ease, background .15s ease, opacity .15s;
+  }
+  .btn:hover{ background:var(--clay-dim); }
+  .btn:active{ transform:scale(0.98); }
+  .btn:disabled{ opacity:0.45; cursor:default; }
+  .btn.ghost{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid rgba(28,34,48,0.3);
+  }
+  .btn.ghost:hover{ background:rgba(28,34,48,0.06); }
+  .btn.block{ width:100%; margin-top:auto; }
+  .spacer{ flex:1; }
+
+  /* Screen 1 */
+  .s1 textarea{ min-height:110px; margin-bottom:18px; }
+
+  /* Screen 2 - interview */
+  .transcript{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-bottom:16px;
+    max-height:260px;
+    overflow-y:auto;
+    padding-right:2px;
+  }
+  .bubble{
+    font-size:14.5px;
+    line-height:1.5;
+    padding:11px 14px;
+    border-radius:3px;
+    max-width:88%;
+  }
+  .bubble.doc{
+    background:rgba(180,67,46,0.08);
+    border-left:2px solid var(--clay);
+    color:var(--ink);
+    align-self:flex-start;
+  }
+  .bubble.doc .who{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--clay-dim);
+    margin-bottom:4px;
+  }
+  .bubble.you{
+    background:rgba(28,34,48,0.06);
+    color:var(--ink);
+    align-self:flex-end;
+  }
+  .bubble.you .who{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--steel-2);
+    margin-bottom:4px;
+  }
+  .thinking{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--steel-2);
+    letter-spacing:0.08em;
+    padding:4px 2px;
+  }
+  .answer-row{
+    display:flex;
+    gap:8px;
+    margin-top:auto;
+  }
+  .answer-row input{ flex:1; }
+
+  /* Screen 3 - diagnosis */
+  .root-line{
+    font-family:'Barlow Condensed', sans-serif;
+    font-weight:600;
+    font-size:22px;
+    color:var(--clay-dim);
+    margin:2px 0 18px;
+    line-height:1.2;
+  }
+  .chain{
+    display:flex;
+    flex-direction:column;
+    margin:6px 0 22px;
+  }
+  .chain-step{
+    font-size:13.5px;
+    line-height:1.4;
+    color:var(--ink-soft);
+    padding:7px 0 7px 20px;
+    position:relative;
+    opacity:0;
+    transform:translateY(4px);
+    animation:stepIn .45s ease forwards;
+  }
+  .chain-step::before{
+    content:'';
+    position:absolute;
+    left:2px; top:15px;
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--clay);
+  }
+  .chain-step::after{
+    content:'';
+    position:absolute;
+    left:4.5px; top:22px;
+    width:1px; height:calc(100% - 8px);
+    background:rgba(180,67,46,0.35);
+  }
+  .chain-step:last-child::after{ display:none; }
+  .chain-step b{ color:var(--ink); font-weight:600; }
+  @keyframes stepIn{ to{ opacity:1; transform:translateY(0);} }
+
+  /* Screen 4 - prescription */
+  .rx-block{
+    border:1px solid rgba(28,34,48,0.15);
+    border-radius:3px;
+    padding:14px 16px;
+    margin-bottom:12px;
+    background:rgba(255,255,255,0.28);
+  }
+  .rx-block .eyebrow{ margin-bottom:5px; }
+  .rx-block p{ margin:0; font-size:14.5px; line-height:1.55; color:var(--ink); }
+  .lock{
+    margin-top:8px;
+    display:flex;
+    flex-direction:column;
+    border:1px dashed rgba(28,34,48,0.3);
+    border-radius:3px;
+    padding:14px 16px;
+    background:rgba(63,107,74,0.06);
+  }
+  .lock .txt{ font-size:13px; color:var(--ink-soft); line-height:1.4; }
+  .lock .txt b{ display:block; color:var(--ink); font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:600; letter-spacing:0.01em; margin-bottom:2px; }
+
+  .err{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--clay-dim);
+    margin-top:10px;
+  }
+  .foot{
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.1em;
+    color:var(--steel-2);
+    margin-top:16px;
+    text-transform:uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="letterhead">
+    <span><span class="mark">✚</span> Bugg Doctor</span>
+    <span id="screenLabel">Intake</span>
+  </div>
+  <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="chart" id="chart"></div>
+  <div class="foot">Confidential Hitting Chart — V1 · Always Late Pathway</div>
+</div>
+
+<script>
+const API_URL = "https://api.anthropic.com/v1/messages";
+const MODEL = "claude-sonnet-4-6";
+const MEMBERSHIP_URL = "https://jasonbugg.gumroad.com/l/pdjpe";
+const BREAKDOWN_URL = "https://jasonbugg.gumroad.com/l/opiut";
+
+const SYSTEM_PROMPT = `You are The Bugg Doctor, an AI hitting diagnostician for baseball and softball hitters ages 12-18 who feel they are "always late" on their swing. You are NOT a swing mechanics analyzer or video app — you diagnose entirely through conversation.
+
+RULES YOU MUST FOLLOW:
+- Listen first. Never assume the diagnosis before you have real evidence from the hitter's own words.
+- Ask exactly ONE question at a time. Keep it short, warm, and conversational — the way a coach talks to a teenager, never clinical or technical.
+- Stop asking questions as soon as you have enough evidence, typically after 3 to 5 exchanges. Do not drag it out or ask questions that don't add new evidence.
+- Your diagnostic lens for V1 is timing: the root cause is not getting ready to hit early enough, which causes lateness, which causes rushing, which changes the swing. Guide your questions to confirm and understand the specifics of this pattern for this hitter (for example: what part of getting ready to hit feels late, when they notice it most, what happens when they swing and miss or make weak contact).
+- Do NOT ask whether the hitter is facing live pitching, a pitching machine, batting practice, or any variation of that question. Always assume the hitter is talking about being in a real game — that's what matters, and asking about pitch source adds nothing to the diagnosis.
+- TERMINOLOGY: the concept is called "getting ready to hit" — this is the hitter's own coaching language and should be the primary term used in your explanations and the diagnosis/prescription. But when ASKING QUESTIONS during the interview, don't assume the hitter already knows what "getting ready to hit" means. Many young hitters have no real load or backward movement at all — they may swing from a dead stop and muscle the ball, and won't recognize the term. So when you ask about it, use accessible, concrete language: ask about "any movement back," "lowering your hands," or plainly whether they do anything before they start their swing — "load" is fine to use here too as a familiar word, since it means the same thing as getting ready to hit (it just involves multiple parts happening together). Once you reach the diagnosis, you can explain plainly that this movement back is what "getting ready to hit" means, so the hitter learns the term rather than being assumed to already know it.
+- CRITICAL TIMING RULE: getting ready to hit must happen before the pitcher releases the ball — never say or imply it happens "before the pitch gets there," "before the ball arrives," or any phrasing that suggests it happens while the ball is already in flight. That is far too late and is factually wrong about the timing. The correct phrasing is always some version of "before the pitcher releases the ball" or "as the pitcher is about to release." Use this exact framing anywhere you describe timing — in the root cause, the why, and especially the focus cue.
+- When you have enough evidence, give exactly ONE root cause. Never list multiple possible causes or hedge between options.
+- Explain why, using this exact causal chain, adapted with specifics from what the hitter told you: "You didn't get ready to hit early enough. When you don't get ready to hit early enough, you're late. When you're late, you rush. When you rush, your swing changes. When your swing changes, it looks different and feels different."
+- Then give the prescription using ONLY the drill defined below. Do NOT invent a different drill, rename it, or describe any drill that is not this one. This is the hitter's own proprietary drill and must be reproduced accurately, not improvised.
+
+THE DRILL — "Throw It Back, Throw It Through" (no-ball, free version):
+No ball needed. The focus is pure body movement and rhythm — teaching the hitter to get ready to hit by first moving back before moving forward. The starting position is relaxed, with the arms/bat hanging out in front, extended. The arms stay fairly straight in this starting position, similar to how a golf swing starts. From here, the hitter throws the bat back with the arms staying relaxed; the wrists and arms naturally break as the hands travel all the way back — this can be a long, sweeping motion going back, not a short one. Once the hands are all the way back, the hitter changes direction and swings through, using the momentum created from throwing it back, taking their normal swing and finishing high. Reset and repeat.
+The purpose is building the rhythm of getting ready to hit — the hitter prepares to go forward by first going back, using the momentum from the backward throw to power the swing through.
+
+CRITICAL RULE — do not prescribe a hand position. Never instruct the hitter to move their hands to a specific target spot (for example, never say anything like "get your hands up to your ear"). Nobody knows in advance where a given hitter's hands should end up — only feel does. The only instruction is to sweep or throw the bat back and let the hands settle wherever they naturally land.
+
+Do NOT describe the finish as a "golf swing follow-through" — only the starting position (arms extended, fairly straight) is like a golf swing. The finish is just the hitter's own normal swing, finishing high.
+
+When you write the "drill" field, describe this drill in your own words for a teenager, but do not change what the drill actually is, and do not violate the rules above.
+
+OUTPUT FORMAT — respond with ONLY raw JSON, no markdown code fences, no commentary before or after, matching exactly one of these two shapes:
+
+To ask another question:
+{"type":"question","text":"your one short question here"}
+
+To deliver the diagnosis (only once you have enough evidence):
+{"type":"diagnosis","root_cause":"one plain-language sentence naming the root cause","why":"2 to 3 sentences walking through the causal chain above, personalized with specifics the hitter shared","drill":"description of Throw It Back, Throw It Through as defined above, in your own words for a teenager","focus":"the single focus cue, one short sentence, framed around getting ready to hit","feel":"one to two sentences describing what it should feel like when done right"}`;
+
+let history = []; // {role, text}
+let screen = 1;
+
+const chart = document.getElementById('chart');
+const screenLabel = document.getElementById('screenLabel');
+const progressFill = document.getElementById('progressFill');
+
+function setProgress(pct, label){
+  progressFill.style.width = pct + '%';
+  screenLabel.textContent = label;
+}
+
+function render(){
+  if(screen === 1) renderScreen1();
+  if(screen === 2) renderScreen2();
+  if(screen === 3) renderScreen3(window._diagnosis);
+  if(screen === 4) renderScreen4(window._diagnosis);
+  resetScroll();
+}
+
+function resetScroll(){
+  // Belt-and-suspenders: different embedding contexts scroll different elements,
+  // and web fonts loading in late can shift layout after our first reset — so we
+  // reapply a few times across the next moments instead of trusting one attempt.
+  const doReset = () => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    if(chart) chart.scrollTop = 0;
+    const stage = document.querySelector('.stage');
+    if(stage && stage.scrollIntoView){
+      stage.scrollIntoView({behavior:'instant', block:'start'});
+    }
+  };
+  doReset();
+  requestAnimationFrame(() => requestAnimationFrame(doReset));
+  setTimeout(doReset, 150);
+  setTimeout(doReset, 400);
+  setTimeout(doReset, 900);
+}
+
+function renderScreen1(){
+  setProgress(10, 'Intake');
+  chart.innerHTML = `
+    <div class="s1" style="display:flex;flex-direction:column;flex:1;">
+      <p class="eyebrow">Patient Intake</p>
+      <h1 class="rx">Hi. I'm The Bugg Doctor.<br>What brings you in today?</h1>
+      <textarea id="intake" placeholder="Tell me what's going on — in your own words. Example: I feel like I'm always a step behind on fastballs..."></textarea>
+      <div class="spacer"></div>
+      <button class="btn block" id="startBtn">Start My Diagnosis</button>
+      <div id="errBox"></div>
+    </div>
+  `;
+  document.getElementById('startBtn').onclick = () => {
+    const val = document.getElementById('intake').value.trim();
+    if(!val){
+      document.getElementById('errBox').innerHTML = "<div class=\"err\">Tell me a little about what you're feeling first.</div>";
+      return;
+    }
+    history.push({role:'user', text: val});
+    screen = 2;
+    render();
+    askNext();
+  };
+}
+
+function renderScreen2(){
+  setProgress(40, 'Interview');
+  const bubbles = history.map(h => `
+    <div class="bubble ${h.role === 'user' ? 'you' : 'doc'}">
+      <span class="who">${h.role === 'user' ? 'You' : 'Bugg Doctor'}</span>
+      ${escapeHtml(h.text)}
+    </div>
+  `).join('');
+  chart.innerHTML = `
+    <p class="eyebrow">Diagnostic Interview</p>
+    <div class="transcript" id="transcript">${bubbles}</div>
+    <div id="thinkingBox"></div>
+    <div class="answer-row" id="answerRow" style="display:none;">
+      <input type="text" id="answerInput" placeholder="Your answer...">
+      <button class="btn" id="answerBtn">Send</button>
+    </div>
+    <div id="errBox"></div>
+  `;
+  const t = document.getElementById('transcript');
+  t.scrollTop = t.scrollHeight;
+}
+
+function showThinking(on){
+  const box = document.getElementById('thinkingBox');
+  if(!box) return;
+  box.innerHTML = on ? '<div class="thinking">the doctor is thinking…</div>' : '';
+}
+
+function showAnswerRow(question){
+  document.getElementById('transcript').insertAdjacentHTML('beforeend', `
+    <div class="bubble doc"><span class="who">Bugg Doctor</span>${escapeHtml(question)}</div>
+  `);
+  const t = document.getElementById('transcript');
+  t.scrollTop = t.scrollHeight;
+  const row = document.getElementById('answerRow');
+  row.style.display = 'flex';
+  const input = document.getElementById('answerInput');
+  input.focus();
+  const send = () => {
+    const val = input.value.trim();
+    if(!val) return;
+    history.push({role:'user', text: val});
+    row.style.display = 'none';
+    renderScreen2();
+    askNext();
+  };
+  document.getElementById('answerBtn').onclick = send;
+  input.onkeydown = (e) => { if(e.key === 'Enter') send(); };
+}
+
+async function askNext(){
+  showThinking(true);
+  try{
+    const msgs = history.map(h => ({
+      role: h.role === 'user' ? 'user' : 'assistant',
+      content: h.role === 'user' ? h.text : JSON.stringify(h.raw)
+    }));
+    const resp = await fetch(API_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 700,
+        system: SYSTEM_PROMPT,
+        messages: msgs
+      })
+    });
+    const data = await resp.json();
+
+    if(!resp.ok){
+      console.error('API error response:', data);
+      throw new Error('API request failed: ' + (data.error && data.error.message ? data.error.message : resp.status));
+    }
+
+    const raw = (data.content || []).map(c => c.text || '').join('').trim();
+    if(!raw){
+      console.error('Empty response from API. Full payload:', data);
+      throw new Error('empty response');
+    }
+
+    // Pull out the JSON object even if the model added stray text or fences around it.
+    const firstBrace = raw.indexOf('{');
+    const lastBrace = raw.lastIndexOf('}');
+    if(firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace){
+      console.error('No JSON object found in model response. Raw text was:', raw);
+      throw new Error('no JSON object in response');
+    }
+    const candidate = raw.slice(firstBrace, lastBrace + 1);
+
+    let parsed;
+    try{
+      parsed = JSON.parse(candidate);
+    } catch(parseErr){
+      console.error('JSON.parse failed. Raw text was:', raw, '| Candidate slice was:', candidate, '| Parse error:', parseErr);
+      throw parseErr;
+    }
+    showThinking(false);
+
+    if(parsed.type === 'question'){
+      history.push({role:'assistant', text: parsed.text, raw: parsed});
+      showAnswerRow(parsed.text);
+    } else if(parsed.type === 'diagnosis'){
+      window._diagnosis = parsed;
+      saveDiagnosis(parsed);
+      screen = 3;
+      render();
+    } else {
+      throw new Error('unexpected response shape');
+    }
+  } catch(err){
+    showThinking(false);
+    const errBox = document.getElementById('errBox');
+    if(errBox){
+      errBox.innerHTML = '<div class="err">The doctor got interrupted.</div>';
+      const retryBtn = document.createElement('button');
+      retryBtn.className = 'btn ghost';
+      retryBtn.style.marginTop = '10px';
+      retryBtn.textContent = 'Try Again';
+      retryBtn.onclick = () => {
+        errBox.innerHTML = '';
+        askNext();
+      };
+      errBox.appendChild(retryBtn);
+    }
+    console.error(err);
+  }
+}
+
+function renderScreen3(dx){
+  setProgress(75, 'Diagnosis');
+  if(!dx){ screen = 1; render(); return; }
+  const chainParts = [
+    "You didn't get ready to hit early enough.",
+    "When you don't get ready to hit early enough, <b>you're late.</b>",
+    "When you're late, <b>you rush.</b>",
+    "When you rush, <b>your swing changes.</b>",
+    "When your swing changes, <b>it looks different and feels different.</b>"
+  ];
+  chart.innerHTML = `
+    <p class="eyebrow">Findings</p>
+    <h1 class="rx" style="font-size:22px;">I think I found the root cause.</h1>
+    <div class="root-line">${escapeHtml(dx.root_cause)}</div>
+    <p class="lede" style="margin-bottom:10px;">${escapeHtml(dx.why)}</p>
+    <div class="chain">
+      ${chainParts.map((c,i) => `<div class="chain-step" style="animation-delay:${i*0.12}s">${c}</div>`).join('')}
+    </div>
+    <div class="spacer"></div>
+    <button class="btn block" id="rxBtn">See My Prescription</button>
+  `;
+  document.getElementById('rxBtn').onclick = () => { screen = 4; render(); };
+}
+
+function renderScreen4(dx){
+  setProgress(100, 'Prescription');
+  if(!dx){ screen = 1; render(); return; }
+  chart.innerHTML = `
+    <p class="eyebrow">The Prescription</p>
+    <h1 class="rx" style="font-size:22px;">One fix. Nothing else to think about.</h1>
+    <div class="rx-block">
+      <p class="eyebrow">The Drill</p>
+      <p>${escapeHtml(dx.drill)}</p>
+    </div>
+    <div class="rx-block">
+      <p class="eyebrow">The Focus</p>
+      <p>${escapeHtml(dx.focus)}</p>
+    </div>
+    <div class="rx-block">
+      <p class="eyebrow">What It Should Feel Like</p>
+      <p>${escapeHtml(dx.feel)}</p>
+    </div>
+    <div class="lock">
+      <div class="txt"><b>Throw It Back, Throw It Through™</b>Watch the full video breakdown of this drill — plus get ongoing swing coaching.</div>
+      <button class="btn block" id="membershipBtn" style="margin-top:12px;">Get Ongoing Coaching — $25/mo</button>
+      <button class="btn ghost block" id="breakdownBtn" style="margin-top:8px; font-size:14px; padding:10px 18px;">Or unlock just this drill — $35 one-time</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn ghost block" id="restartBtn" style="margin-top:14px;">Start a New Diagnosis</button>
+  `;
+  document.getElementById('membershipBtn').onclick = () => window.open(MEMBERSHIP_URL, '_blank');
+  document.getElementById('breakdownBtn').onclick = () => window.open(BREAKDOWN_URL, '_blank');
+  document.getElementById('restartBtn').onclick = () => {
+    history = [];
+    window._diagnosis = null;
+    screen = 1;
+    render();
+  };
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function saveDiagnosis(dx){
+  try{
+    const key = 'diagnosis:' + Date.now();
+    await window.storage.set(key, JSON.stringify({
+      intake: history[0] ? history[0].text : '',
+      diagnosis: dx,
+      ts: new Date().toISOString()
+    }), false);
+  } catch(e){ console.error('storage save failed', e); }
+}
+
+function showFatalRecovery(){
+  chart.innerHTML = `
+    <p class="eyebrow">Something Went Wrong</p>
+    <h1 class="rx" style="font-size:22px;">The chart got knocked off the clipboard.</h1>
+    <p class="lede">No worries — nothing's lost. Let's start a fresh diagnosis.</p>
+    <div class="spacer"></div>
+    <button class="btn block" id="recoverBtn">Start Over</button>
+  `;
+  const btn = document.getElementById('recoverBtn');
+  if(btn){
+    btn.onclick = () => {
+      history = [];
+      window._diagnosis = null;
+      screen = 1;
+      render();
+    };
+  }
+}
+
+window.addEventListener('error', (e) => {
+  console.error('Global error caught:', e.error || e.message);
+  if(screen !== 1 || document.getElementById('intake') === null){
+    showFatalRecovery();
+  }
+});
+
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('Unhandled rejection caught:', e.reason);
+});
+
+render();
+</script>
+</body>
+</html>
