@@ -308,6 +308,15 @@
     text-transform:uppercase;
   }
 </style>
+<!-- MailerLite Universal -->
+<script>
+    (function(w,d,e,u,f,l,n){w[f]=w[f]||function(){(w[f].q=w[f].q||[])
+    .push(arguments);},l=d.createElement(e),l.async=1,l.src=u,
+    n=d.getElementsByTagName(e)[0],n.parentNode.insertBefore(l,n);})
+    (window,document,'script','https://assets.mailerlite.com/js/universal.js','ml');
+    ml('account', '2341485');
+</script>
+<!-- End MailerLite Universal -->
 </head>
 <body>
 <div class="stage">
@@ -318,7 +327,7 @@
   <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
 
   <div class="chart" id="chart"></div>
-  <div class="foot">Confidential Hitting Chart — V1 · Always Late Pathway</div>
+  <div class="foot">Confidential Hitting Chart — Get Ready To Hit</div>
 </div>
 
 <script>
@@ -326,6 +335,7 @@ const API_URL = "/.netlify/functions/ask-doctor";
 const MODEL = "claude-sonnet-4-6";
 const MEMBERSHIP_URL = "https://jasonbugg.gumroad.com/l/pdjpe";
 const BREAKDOWN_URL = "https://jasonbugg.gumroad.com/l/opiut";
+const BOOK_URL = "https://jasonbugg.gumroad.com/l/umysb";
 
 const SYSTEM_PROMPT = `You are The Bugg Doctor, an AI hitting diagnostician for baseball and softball hitters and their parents. You diagnose entirely through conversation — you are not a swing-mechanics analyzer and not a video app.
 
@@ -607,21 +617,11 @@ async function askNext(){
 function renderScreen3(dx){
   setProgress(75, 'Diagnosis');
   if(!dx){ screen = 1; render(); return; }
-  const chainParts = [
-    "You didn't get ready to hit early enough.",
-    "When you don't get ready to hit early enough, <b>you're late.</b>",
-    "When you're late, <b>you rush.</b>",
-    "When you rush, <b>your swing changes.</b>",
-    "When your swing changes, <b>it looks different and feels different.</b>"
-  ];
   chart.innerHTML = `
     <p class="eyebrow">Findings</p>
-    <h1 class="rx" style="font-size:22px;">I think I found the root cause.</h1>
+    <h1 class="rx" style="font-size:22px;">Here's what I found.</h1>
     <div class="root-line">${escapeHtml(dx.root_cause)}</div>
     <p class="lede" style="margin-bottom:10px;">${escapeHtml(dx.why)}</p>
-    <div class="chain">
-      ${chainParts.map((c,i) => `<div class="chain-step" style="animation-delay:${i*0.12}s">${c}</div>`).join('')}
-    </div>
     <div class="spacer"></div>
     <button class="btn block" id="rxBtn">See My Prescription</button>
   `;
@@ -646,14 +646,22 @@ function renderScreen4(dx){
       <p class="eyebrow">What It Should Feel Like</p>
       <p>${escapeHtml(dx.feel)}</p>
     </div>
+    <div class="rx-block" id="capture">
+      <p class="eyebrow">Keep This</p>
+      <p style="margin-bottom:10px;">I'll email you this diagnosis and the drill, so you have it with you at the field.</p>
+      <div class="ml-embedded" data-form="nnCIaf"></div>
+    </div>
     <div class="lock">
-      <div class="txt"><b>See The Full Breakdown</b>Watch the complete video walkthrough of your fix — plus get ongoing swing coaching.</div>
-      <button class="btn block" id="membershipBtn" style="margin-top:12px;">Get Ongoing Coaching — $25/mo</button>
-      <button class="btn ghost block" id="breakdownBtn" style="margin-top:8px; font-size:14px; padding:10px 18px;">Or unlock just this drill — $35 one-time</button>
+      <div class="txt"><b>Now Get The Whole System</b>This fix is one piece of it. Here's how to go further.</div>
+      <button class="btn block" id="bookBtn" style="margin-top:12px;">Read The Book — One Swing. One System.</button>
+      <button class="btn ghost block" id="breakdownBtn" style="margin-top:8px; font-size:14px; padding:10px 18px;">Send me your swing — $35 one-time breakdown</button>
+      <button class="btn ghost block" id="membershipBtn" style="margin-top:8px; font-size:14px; padding:10px 18px;">Ongoing coaching — $25/mo</button>
     </div>
     <div class="spacer"></div>
     <button class="btn ghost block" id="restartBtn" style="margin-top:14px;">Start a New Diagnosis</button>
   `;
+  if(window.ml){ try{ ml('forms','render'); }catch(e){} }
+  document.getElementById('bookBtn').onclick = () => window.open(BOOK_URL, '_blank');
   document.getElementById('membershipBtn').onclick = () => window.open(MEMBERSHIP_URL, '_blank');
   document.getElementById('breakdownBtn').onclick = () => window.open(BREAKDOWN_URL, '_blank');
   document.getElementById('restartBtn').onclick = () => {
