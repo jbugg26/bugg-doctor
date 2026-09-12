@@ -691,9 +691,18 @@ function renderScreen4(dx){
     <button class="btn ghost block" id="restartBtn" style="margin-top:14px;">Start a New Diagnosis</button>
   `;
   mountMailerLite();
-  document.getElementById('bookBtn').onclick = () => window.open(BOOK_URL, '_blank');
-  document.getElementById('membershipBtn').onclick = () => window.open(MEMBERSHIP_URL, '_blank');
-  document.getElementById('breakdownBtn').onclick = () => window.open(BREAKDOWN_URL, '_blank');
+  document.getElementById('bookBtn').onclick = () => {
+    if(typeof gtag === 'function') gtag('event', 'book_offer_click');
+    window.open(BOOK_URL, '_blank');
+  };
+  document.getElementById('membershipBtn').onclick = () => {
+    if(typeof gtag === 'function') gtag('event', 'membership_offer_click');
+    window.open(MEMBERSHIP_URL, '_blank');
+  };
+  document.getElementById('breakdownBtn').onclick = () => {
+    if(typeof gtag === 'function') gtag('event', 'swing_evaluation_offer_click');
+    window.open(BREAKDOWN_URL, '_blank');
+  };
   document.getElementById('restartBtn').onclick = () => {
     history = [];
     window._diagnosis = null;
