@@ -652,6 +652,11 @@ function mountMailerLite(onReady){
     m.appendChild(form);
     stash.style.position = 'static';
     stash.style.left = 'auto';
+    m.querySelectorAll('p').forEach((paragraph) => {
+      if(/get this sent to you/i.test(paragraph.textContent || '')) {
+        paragraph.textContent = 'Unlock this prescription so you have it with you at the field.';
+      }
+    });
     const embeddedForm = m.querySelector('form');
     if(embeddedForm && onReady) onReady(embeddedForm);
     return true;
@@ -670,7 +675,7 @@ function renderScreen4(dx){
   chart.innerHTML = `
     <div class="rx-block" id="emailGate">
       <p class="eyebrow">Your Prescription Is Ready</p>
-      <h1 class="rx" style="font-size:22px;">Where should I send your hitting help?</h1>
+      <h1 class="rx" style="font-size:22px;">Unlock Your Personalized Prescription.</h1>
       <p class="lede" style="margin-bottom:12px;">Enter your email to unlock your personalized Bugg Doctor prescription and receive practical Get Ready To Hit coaching tips.</p>
       <div id="mlMount"></div>
     </div>
