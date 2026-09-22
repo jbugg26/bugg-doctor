@@ -640,7 +640,7 @@ function renderScreen3(dx){
   document.getElementById('rxBtn').onclick = () => { screen = 4; render(); };
 }
 
-function mountMailerLite(){
+function mountMailerLite(onReady){
   const mount = document.getElementById('mlMount');
   const stash = document.getElementById('mlStash');
   if(!mount || !stash) return;
@@ -652,6 +652,8 @@ function mountMailerLite(){
     m.appendChild(form);
     stash.style.position = 'static';
     stash.style.left = 'auto';
+    const embeddedForm = m.querySelector('form');
+    if(embeddedForm && onReady) onReady(embeddedForm);
     return true;
   };
   if(move()) return;
@@ -666,31 +668,87 @@ function renderScreen4(dx){
   setProgress(100, 'Prescription');
   if(!dx){ screen = 1; render(); return; }
   chart.innerHTML = `
-    <p class="eyebrow">The Prescription</p>
-    <h1 class="rx" style="font-size:22px;">One fix. Nothing else to think about.</h1>
-    <div class="rx-block">
-      <p class="eyebrow">The Fix</p>
-      <p>${escapeHtml(dx.drill)}</p>
-    </div>
-    <div class="rx-block">
-      <p class="eyebrow">The Focus</p>
-      <p>${escapeHtml(dx.focus)}</p>
-    </div>
-    <div class="rx-block" id="capture">
-      <p class="eyebrow">Keep This</p>
-      <p style="margin-bottom:10px;">I'll email you this diagnosis and the fix, so you have it with you at the field.</p>
+    <div class="rx-block" id="emailGate">
+      <p class="eyebrow">Your Prescription Is Ready</p>
+      <h1 class="rx" style="font-size:22px;">Where should I send your hitting help?</h1>
+      <p class="lede" style="margin-bottom:12px;">Enter your email to unlock your personalized Bugg Doctor prescription and receive practical Get Ready To Hit coaching tips.</p>
       <div id="mlMount"></div>
     </div>
-    <div class="lock">
-      <div class="txt"><b>Now Get The Whole System</b>This fix is one piece of it. Here's how to go further.</div>
-      <button class="btn block" id="bookBtn" style="margin-top:12px;">Read The Book — One Swing. One System.</button>
-      <button class="btn ghost block" id="breakdownBtn" style="margin-top:8px; font-size:14px; padding:10px 18px;">Send me your swing — $49 one-time breakdown</button>
-      <button class="btn ghost block" id="membershipBtn" style="margin-top:8px; font-size:14px; padding:10px 18px;">Ongoing coaching — $25/mo</button>
+    <div id="prescriptionContent" style="display:none;">
+      <p class="eyebrow">The Prescription</p>
+      <h1 class="rx" style="font-size:22px;">One fix. Nothing else to think about.</h1>
+      <div class="rx-block">
+        <p class="eyebrow">The Fix</p>
+        <p>${escapeHtml(dx.drill)}</p>
+      </div>
+      <div class="rx-block">
+        <p class="eyebrow">The Focus</p>
+        <p>${escapeHtml(dx.focus)}</p>
+      </div>
+      <div class="rx-block" id="capture">
+        <p class="eyebrow">Keep This</p>
+        <p style="margin-bottom:10px;">Copy this prescription so you have it with you at the field.</p>
+        <button class="btn ghost block" id="copyBtn" style="font-size:14px; padding:10px 18px;">Copy My Prescription</button>
+      </div>
+      <div class="lock">
+        <div class="txt"><b>Now Get The Whole System</b>This fix is one piece of it. Here's how to go further.</div>
+        <button class="btn block" id="bookBtn" style="margin-top:12px;">Read The Book — One Swing. One System.</button>
+        <button class="btn ghost block" id="breakdownBtn" style="margin-top:8px; font-size:14px; padding:10px 18px;">Send me your swing — $49 one-time breakdown</button>
+        <button class="btn ghost block" id="membershipBtn" style="margin-top:8px; font-size:14px; padding:10px 18px;">Ongoing coaching — $25/mo</button>
+      </div>
     </div>
     <div class="spacer"></div>
     <button class="btn ghost block" id="restartBtn" style="margin-top:14px;">Start a New Diagnosis</button>
   `;
-  mountMailerLite();
+  mountMailerLite((form) => {
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if(submitBtn) submitBtn.textContent = 'Unlock My Prescription';
+    form.addEventListener('submit', () => unlockPrescription(dx), {once:true});
+  });
+  document.getElementById('restartBtn').onclick = () => {
+    history = [];
+    window._diagnosis = null;
+    screen = 1;
+    render();
+  };
+}
+
+function unlockPrescription(dx){
+  const gate = document.getElementById('emailGate');
+  const content = document.getElementById('prescriptionContent');
+  if(gate) gate.style.display = 'none';
+  if(content) content.style.display = 'block';
+  if(typeof gtag === 'function') gtag('event', 'prescription_unlocked');
+  resetScroll();
+
+  document.getElementById('copyBtn').onclick = async () => {
+    const prescription = [
+      'MY BUGG DOCTOR PRESCRIPTION',
+      '',
+      'WHAT I FOUND',
+      dx.root_cause,
+      '',
+      'WHY',
+      dx.why,
+      '',
+      'THE FIX',
+      dx.drill,
+      '',
+      'THE FOCUS',
+      dx.focus,
+      '',
+      'Get Ready To Hit — https://getreadytohit.com'
+    ].join('\n');
+    try{
+      await navigator.clipboard.writeText(prescription);
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = 'Copied — Take It To The Field';
+      if(typeof gtag === 'function') gtag('event', 'prescription_copy');
+    } catch(e){
+      console.error('copy failed', e);
+      document.getElementById('copyBtn').textContent = 'Press and hold the prescription to copy';
+    }
+  };
   document.getElementById('bookBtn').onclick = () => {
     if(typeof gtag === 'function') gtag('event', 'book_offer_click');
     window.open(BOOK_URL, '_blank');
@@ -703,12 +761,6 @@ function renderScreen4(dx){
     if(typeof gtag === 'function') gtag('event', 'swing_evaluation_offer_click');
     window.open(BREAKDOWN_URL, '_blank');
   };
-  document.getElementById('restartBtn').onclick = () => {
-    history = [];
-    window._diagnosis = null;
-    screen = 1;
-    render();
-  };
 }
 
 function escapeHtml(str){
@@ -720,11 +772,11 @@ function escapeHtml(str){
 async function saveDiagnosis(dx){
   try{
     const key = 'diagnosis:' + Date.now();
-    await window.storage.set(key, JSON.stringify({
+    window.localStorage.setItem(key, JSON.stringify({
       intake: history[0] ? history[0].text : '',
       diagnosis: dx,
       ts: new Date().toISOString()
-    }), false);
+    }));
   } catch(e){ console.error('storage save failed', e); }
 }
 
